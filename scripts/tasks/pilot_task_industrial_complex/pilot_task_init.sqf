@@ -9,11 +9,14 @@ _taskMarker2 = "task2Marker"; // Ensure this marker is placed in the editor
 _taskMarker3 = "task3Marker"; // Ensure this marker is placed in the editor
 
 // Create the task
-[_taskID1, true, [_taskTitle, _taskDescription, _taskMarker1], getPosATL player, 1] call BIS_fnc_taskCreate;
+[true, _taskID1, [_taskDescription, _taskTitle, _taskMarker1], getMarkerPos _taskMarker1, "ASSIGNED", 1, true, "DESTROY", true] call BIS_fnc_taskCreate;
+
 // Create the task
-[_taskID2, true, [_taskTitle, _taskDescription, _taskMarker2], getPosATL player, 1] call BIS_fnc_taskCreate;
+[true, _taskID2, [_taskDescription, _taskTitle, _taskMarker2], getMarkerPos _taskMarker2, "ASSIGNED", 1, true, "DESTROY", true] call BIS_fnc_taskCreate;
+
 // Create the task
-[_taskID3, true, [_taskTitle, _taskDescription, _taskMarker3], getPosATL player, 1] call BIS_fnc_taskCreate;
+[true, _taskID3, [_taskDescription, _taskTitle, _taskMarker3], getMarkerPos _taskMarker3, "ASSIGNED", 1, true, "DESTROY", true] call BIS_fnc_taskCreate;
+
 
 // Initialize damage tracking variables
 missionNamespace setVariable ["zone1Damaged", false, true];
@@ -23,6 +26,7 @@ missionNamespace setVariable ["zone3Damaged", false, true];
 // Start monitoring task progress
 [] execVM "scripts\tasks\pilot_task_industrial_complex\pilot_task_monitor.sqf";
 // Start displaying damage status
-// [] execVM "pilot_task_display.sqf";
+[] execVM "scripts\tasks\pilot_task_industrial_complex\pilot_task_display.sqf";
+
 
 hint "task 1 init loaded";
