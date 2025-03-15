@@ -1,0 +1,13 @@
+// File: description.ext
+
+class CfgFunctions
+{
+    class FlightSchool
+    {
+        class UI
+        {
+            file = "functions";
+            class displayText {};
+        };
+    };
+};
