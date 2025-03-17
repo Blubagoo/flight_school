@@ -1,4 +1,80 @@
-// File: description.ext
+// description.ext - Mission Configuration File
+
+// Author & Mission Name
+author = "Aazkrull";
+onLoadName = "Flight Training";
+onLoadMission = "A complete series of complicated pilot missions aimed at improving your abilities as a pilot.";
+// loadScreen = "images\mission_logo.jpg";  // Optional mission logo
+
+// Mission Settings
+class Header {
+    gameType = Coop;     // Can be "Coop", "CTF", "DM", etc.
+    minPlayers = 1;
+    maxPlayers = 10;
+};
+
+// Enable Task Notifications
+enableDebugConsole = 1; // Allow debug console (0 = Off, 1 = Admins, 2 = Everyone)
+showHUD = 1;            // Enable HUD
+showCompass = 1;
+showGPS = 1;
+showMap = 1;
+showWatch = 1;
+respawn = 3;            // 3 = Base respawn
+respawnDelay = 5;       // Delay before respawn
+
+// Task Notifications (Enables task pop-ups)
+class CfgDebriefing {
+    class TaskSucceeded {
+        title = "Task Completed";
+        subtitle = "Great job!";
+        description = "You successfully completed the task.";
+        pictureBackground = "";
+        picture = "iconOK";
+        pictureColor[] = {0.0, 0.3, 0.6, 1}; // Blue color
+    };
+
+    class TaskFailed {
+        title = "Task Failed";
+        subtitle = "Mission failed.";
+        description = "You failed to complete the task.";
+        pictureBackground = "";
+        picture = "iconKIA";
+        pictureColor[] = {1.0, 0.0, 0.0, 1}; // Red color
+    };
+};
+
+// Task Sounds (Optional)
+class CfgSounds {
+    sounds[] = {};
+    class TaskComplete {
+        name = "TaskComplete";
+        sound[] = {"sounds\task_complete.ogg", 1, 1};
+        titles[] = {};
+    };
+    class TaskFail {
+        name = "TaskFail";
+        sound[] = {"sounds\task_fail.ogg", 1, 1};
+        titles[] = {};
+    };
+};
+
+// Custom Params for Dynamic Tasking
+class Params {
+    class TaskDifficulty {
+        title = "Task Difficulty";
+        values[] = {0, 1, 2};
+        texts[] = {"Easy", "Normal", "Hard"};
+        default = 1;
+    };
+    class TaskTimeLimit {
+        title = "Task Time Limit (minutes)";
+        values[] = {0, 10, 20, 30};
+        texts[] = {"No Limit", "10 min", "20 min", "30 min"};
+        default = 20;
+    };
+};
+
 
 class CfgFunctions
 {
