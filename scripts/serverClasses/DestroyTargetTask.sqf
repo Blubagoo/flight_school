@@ -2,80 +2,90 @@
 
 if (!isServer) exitWith { diag_log "[DestroyTargetTask] Not running on server! Exiting."; };
 
-private _DestroyTargetTask = createHashMap;
+// Ensure TaskManager exists in missionNamespace
+if (isNil "TaskManager") then {
+    missionNamespace setVariable ["TaskManager", createHashMap];
+};
+private _taskManager = missionNamespace getVariable ["TaskManager", createHashMap];
 
-_DestroyTargetTask set ["createTask", {
+// Function to create and assign a destroy target task
+private _createDestroyTargetTask = {
     params ["_taskID", "_taskTitle", "_taskDescription", "_pos", "_unitTypes"];
-    
-    diag_log format ["[DestroyTargetTask] Received request to create task: %1 at %2 with units %3", _taskID, _pos, _unitTypes];
 
-    private _markerName = format ["marker_%1", _taskID];
-    private _triggerName = format ["trigger_%1", _taskID];
+    diag_log format ["[DestroyTargetTask] Creating task: %1 at %2 with units %3", _taskID, _pos, _unitTypes];
 
     // Create map marker
+    private _markerName = format ["marker_%1", _taskID];
     private _marker = createMarker [_markerName, _pos];
     _marker setMarkerType "mil_destroy";
     _marker setMarkerColor "ColorRed";
 
-    diag_log format ["[DestroyTargetTask] Created marker %1 at position %2", _markerName, _pos];
-
-    // Create Trigger for enemy detection
+    // Create trigger for enemy detection
+    private _triggerName = format ["DestroyTargetTask_Trigger_%1", _taskID];
     private _trigger = createTrigger ["EmptyDetector", _pos];
     _trigger setTriggerArea [3, 3, 0, false];
     _trigger setTriggerActivation ["ANY", "PRESENT", true];
+    missionNamespace setVariable [_triggerName, _trigger];
 
-    diag_log format ["[DestroyTargetTask] Created trigger %1 at position %2", _triggerName, _pos];
-
-    // Spawn Enemies (Random 1-5 of each type)
+    // Spawn enemies
     private _spawnedUnits = [];
     {
         private _count = floor (random 5) + 1; // 1-5 units per type
-        diag_log format ["[DestroyTargetTask] Spawning %1 units of type %2", _count, _x];
-
-        private _group = createGroup east;  // Create a group for the enemy units
+        private _group = createGroup east;
+        _group setCombatMode "BLUE";
+        _group setBehaviour "CARELESS";
 
         for "_i" from 1 to _count do {
             private _unit = _group createUnit [_x, _pos, [], 0, "NONE"];
+            { _unit disableAI _x; } forEach ["MOVE", "TARGET", "AUTOTARGET", "FSM", "SUPPRESSION"];
+            _unit setUnitPos "UP";
+			removeAllWeapons _unit;
+            removeAllContainers _unit;
+            removeAllAssignedItems _unit;
+            _unit setVariable ["BIS_noCoreConversations", true]; // Prevent radio issues
             _spawnedUnits pushBack _unit;
-            diag_log format ["[DestroyTargetTask] Spawned unit of type %1 at %2", _x, _pos];
         };
     } forEach _unitTypes;
 
-    diag_log format ["[DestroyTargetTask] Assigning task: %1", _taskID];
-
+    // Ensure TaskManager exists before using it
     private _taskManager = missionNamespace getVariable ["TaskManager", createHashMap];
+    private _createTaskFunction = _taskManager get "createTask";
 
-	if (isNil "_taskManager" || {typeName _taskManager != "HASHMAP"}) then {
-		diag_log "[DestroyTargetTask] ERROR: TaskManager not found!";
-	} else {
-		private _createTaskFunction = _taskManager get "createTask";
+    if (typeName _createTaskFunction == "CODE") then {
+        [_taskID, _taskTitle, _taskDescription, _markerName, "DESTROY"] call _createTaskFunction;
+    } else {
+        diag_log "[DestroyTargetTask] ERROR: TaskManager createTask function not found!";
+    };
 
-		if (isNil "_createTaskFunction") then {
-			diag_log "[DestroyTargetTask] ERROR: TaskManager createTask function not found!";
-		} else {
-			[_taskID, _taskTitle, _taskDescription, _markerName, "DESTROY"] call _createTaskFunction;
-			diag_log format ["[DestroyTargetTask] Task %1 assigned successfully!", _taskID];
-		};
-	};
+    // Start damage tracking if function exists
+    private _fn_displayZoneStatus = missionNamespace getVariable ["FlightSchool_fnc_displayZoneStatus", {}];
+    if (typeName _fn_displayZoneStatus == "CODE") then {
+        [_pos, _taskID] spawn _fn_displayZoneStatus;
+    };
 
-    diag_log format ["[DestroyTargetTask] Starting damage tracking for %1", _taskID];
-    [_pos, _taskID] spawn fn_displayZoneStatus;
-
+    // Monitor enemy units and complete task upon their elimination
     [_spawnedUnits, _taskID] spawn {
         params ["_units", "_taskID"];
         waitUntil { sleep 1; {alive _x} count _units == 0 };
 
-        diag_log format ["[DestroyTargetTask] All enemies eliminated for task: %1. Marking as complete.", _taskID];
+        // Ensure TaskManager exists before using it
+        private _taskManager = missionNamespace getVariable ["TaskManager", createHashMap];
+        private _completeTaskFunction = _taskManager get "completeTask";
+        if (typeName _completeTaskFunction == "CODE") then {
+            [_taskID] call _completeTaskFunction;
+        };
 
-        (missionNamespace getVariable ["TaskManager", createHashMap] get "completeTask") 
-            call [_taskID];
-
+        // Cleanup marker and trigger
         deleteMarker format ["marker_%1", _taskID];
-        deleteVehicle format ["trigger_%1", _taskID];
-        diag_log format ["[DestroyTargetTask] Cleaned up marker and trigger for task: %1", _taskID];
+        private _triggerName = format ["DestroyTargetTask_Trigger_%1", _taskID];
+        private _storedTrigger = missionNamespace getVariable [_triggerName, objNull];
+        if (!isNull _storedTrigger) then {
+            deleteVehicle _storedTrigger;
+        };
     };
-}];
+};
 
-missionNamespace setVariable ["DestroyTargetTask_createTask", _DestroyTargetTask get "createTask"];
+// Store function in missionNamespace for remote execution
+missionNamespace setVariable ["DestroyTargetTask_createTask", _createDestroyTargetTask];
 
 diag_log "[DestroyTargetTask] Initialized on the server.";

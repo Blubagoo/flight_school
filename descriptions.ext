@@ -75,15 +75,11 @@ class Params {
     };
 };
 
-
-class CfgFunctions
-{
-    class FlightSchool
-    {
-        class UI
-        {
-            file = "functions";
-            class displayText {};
+class CfgFunctions {
+    class FlightSchool {
+        class ZoneStatus {
+            file = "functions\fn_displayZoneStatus.sqf";
+            class displayZoneStatus {};
         };
     };
 };
