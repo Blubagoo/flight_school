@@ -16,8 +16,9 @@ _infoStand addAction [
     "Create Task",  // Text shown in the scroll menu
     {
         diag_log "[Task System] Calling DestroyTargetTask_createTask from scroll menu..."; 
-        
-        ["_Task1", "Destroy Enemy Camp", "Eliminate all enemies in the marked zone.", [17894.8,5019.41,0], ["O_Soldier_F"]]   
+        private _randomPos = ["TargetZone_"] call FlightSchool_fnc_findRandomMarkerWithPrefix;
+        diag_log format ["[Mission: AddAction] randomPosition: %1", _randomPos];
+        ["_Task1", "Destroy Enemy Camp", "Eliminate all enemies in the marked zone.", _randomPos, ["O_Soldier_F"]]   
             remoteExec ["DestroyTargetTask_createTask", 2]; 
         
         diag_log "[Task System] DestroyTargetTask_createTask remoteExec called."; 

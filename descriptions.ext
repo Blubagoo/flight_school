@@ -77,8 +77,10 @@ class Params {
 
 class CfgFunctions {
     class FlightSchool {
-        class ZoneStatus {
-            file = "functions\fn_displayZoneStatus.sqf";
+        class Utilities {
+            file = "scripts";
+            class findMarkersWithPrefix {};
+            class findRandomMarkerWithPrefix {};
             class displayZoneStatus {};
         };
     };
